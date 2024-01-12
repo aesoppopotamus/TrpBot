@@ -1,15 +1,21 @@
 import pymysql
+import os
 from apscheduler.triggers.interval import IntervalTrigger
 from utils.utils import create_repeating_task
+
 
 class Database:
     def __init__(self, bot, scheduler):
         self.bot = bot
         self.scheduler = scheduler
+        self.dbhost = os.getenv('DBHOST')
+        self.dbuser = os.getenv('DBUSER')
+        self.dbpass = os.getenv('DBPASS')
+        self.database = os.getenv('DBNAME')
 
     ##lookup 
     def stored_repeating_messages(self):
-        connection = pymysql.connect(host='mariadb', user='botuser', password='botpassword', database='trpbotdb', cursorclass=pymysql.cursors.DictCursor)
+        connection = pymysql.connect(host=self.dbhost, user=self.dbuser, password=self.dbpass, database=self.database, cursorclass=pymysql.cursors.DictCursor)
         try:
             with connection.cursor() as cursor:
                 sql = "SELECT * FROM scheduled_repeating_messages"
@@ -30,7 +36,7 @@ class Database:
 
     ##queue up existing records from db
     async def queue_repeating_messages(self):
-        connection = pymysql.connect(host='mariadb', user='botuser', password='botpassword', database='trpbotdb', cursorclass=pymysql.cursors.DictCursor)
+        connection = pymysql.connect(host=self.dbhost, user=self.dbuser, password=self.dbpass, database=self.database, cursorclass=pymysql.cursors.DictCursor)
         try:
             with connection.cursor() as cursor:
                 sql = "SELECT * FROM scheduled_repeating_messages"
@@ -53,7 +59,7 @@ class Database:
             connection.close()  
 
     def add_scheduled_message(self, channel_id, message, interval_unit, interval_value, job_id, username):
-        connection = pymysql.connect(host='mariadb', user='botuser', password='botpassword', database='trpbotdb', cursorclass=pymysql.cursors.DictCursor)
+        connection = pymysql.connect(host=self.dbhost, user=self.dbuser, password=self.dbpass, database=self.database, cursorclass=pymysql.cursors.DictCursor)
         try:
             with connection.cursor() as cursor:
                 sql = """
@@ -67,7 +73,7 @@ class Database:
             connection.close()  
 
     def get_scheduled_messages(self):
-        connection = pymysql.connect(host='mariadb', user='botuser', password='botpassword', database='trpbotdb', cursorclass=pymysql.cursors.DictCursor)
+        connection = pymysql.connect(host=self.dbhost, user=self.dbuser, password=self.dbpass, database=self.database, cursorclass=pymysql.cursors.DictCursor)
         try:
             with connection.cursor() as cursor:
                 sql = "SELECT * FROM scheduled_repeating_messages"
@@ -81,7 +87,7 @@ class Database:
             connection.close()  
 
     def delete_scheduled_message(self, job_id):
-        connection = pymysql.connect(host='mariadb', user='botuser', password='botpassword', database='trpbotdb', cursorclass=pymysql.cursors.DictCursor)
+        connection = pymysql.connect(host=self.dbhost, user=self.dbuser, password=self.dbpass, database=self.database, cursorclass=pymysql.cursors.DictCursor)
         try:
             with connection.cursor() as cursor:
                 sql = "DELETE FROM scheduled_repeating_messages WHERE job_id = %s"
