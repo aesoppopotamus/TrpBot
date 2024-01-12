@@ -2,16 +2,14 @@ import discord
 from discord.ext import commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import os
-from dotenv import load_dotenv
 from database.database import Database
+from dotenv import load_dotenv
 
 load_dotenv()
-
-# intents setup
+TOKEN = os.getenv('BOT_TOKEN')
 intents = discord.Intents.all() 
 intents.messages = True
 
-TOKEN = os.getenv('BOT_TOKEN')
 
 class MyBot(commands.Bot):
         def __init__(self, command_prefix, intents):

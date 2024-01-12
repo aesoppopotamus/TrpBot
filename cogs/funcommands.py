@@ -1,12 +1,13 @@
+import os
 import discord
 from discord.ext import commands
 import random
-from config import API_NINJAS_KEY
 import aiohttp
 
 class FunCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.apininjakey = os.getenv('API_NINJAS_KEY')
  
 # Stop resisting
     @commands.command()
@@ -29,7 +30,7 @@ class FunCommands(commands.Cog):
     async def tell_me_a_joke(self, ctx):
         api_url = 'https://api.api-ninjas.com/v1/dadjokes?limit=1'
         async with aiohttp.ClientSession() as session:
-            async with session.get(api_url, headers={'X-Api-Key': API_NINJAS_KEY}) as response:
+            async with session.get(api_url, headers={'X-Api-Key': self.apininjakey}) as response:
                 if response.status == 200:
                     data = await response.json()
                     joke = data[0]['joke']  # Assuming the API returns a list of jokes

@@ -23,7 +23,7 @@ red = discord.Color.from_rgb(255, 28, 25)      # error red
 # Utilities and helper functions
 
 async def create_repeating_task(bot, channel_id, message_content, username):
-    await bot.send_message(channel_id, f"{message_content}\n(Scheduled by {username})")
+    await bot.send_message(channel_id, f"{message_content}\n*(scheduled by {username})*")
 
 
 
