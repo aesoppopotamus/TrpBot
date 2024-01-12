@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS scheduled_repeating_messages (
     message_content TEXT,
     interval_unit VARCHAR(50),
     interval_value INT,
-    job_id VARCHAR(255)
+    job_id VARCHAR(255),
     scheduled_by VARCHAR(255)
 );

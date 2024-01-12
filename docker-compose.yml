@@ -2,19 +2,23 @@ version: '3.8'
 services:
   trpbot:
     build: .
+    volumes:
+    - .:/usr/src/app
     env_file:
     - .env
     depends_on:
     - mariadb
-    command: ["./wait-for-it.sh", "mariadb:3306", "--", "python", "main.py"]
+    command: /bin/sh -c "while true; do python ./main.py; sleep 2; done"
   
   mariadb:
     image: mariadb:latest
     environment:
-      - MYSQL_ROOT_PASSWORD=TerminationProtocol631!
-      - MYSQL_DATABASE=trpbotdb
-      - MYSQL_USER=trpbot
-      - MYSQL_PASSWORD=trp4rocks
+      - MYSQL_ROOT_PASSWORD=${DBROOTPASS}
+      - MYSQL_DATABASE=${DBNAME}
+      - MYSQL_USER=${DBUSER}
+      - MYSQL_PASSWORD=${DBPASS}
+    env_file:
+    - .env
     volumes:
       - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
       - mariadb-data:/var/lib/mysql 

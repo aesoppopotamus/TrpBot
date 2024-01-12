@@ -15,6 +15,3 @@ COPY wait-for-it.sh /usr/src/app/wait-for-it.sh
 RUN chmod +x /usr/src/app/wait-for-it.sh
 
 COPY init_db.sql /usr/src/app/
-
-# Run bot.py when the container launches
-CMD ["python", "./main.py"]
