@@ -25,7 +25,64 @@ red = discord.Color.from_rgb(255, 28, 25)      # error red
 async def create_repeating_task(bot, channel_id, message_content, username):
     await bot.send_message(channel_id, f"{message_content}\n*(scheduled by {username})*")
 
+async def create_repeating_cmd(bot, channel_id, command_content):
+    channel = bot.get_channel(channel_id)
+    if channel:
+        ctx = await bot.get_context(channel.last_message)
+        await bot.invoke(ctx, command_content)
 
+
+## Embeds
+        
+def format_scheduled_messages(scheduled_messages_db):
+    if not scheduled_messages_db:
+        return []
+    fields = []
+    for schedule in scheduled_messages_db:
+        field = {
+            "name": f"Message Job ID: {schedule['job_id']}\n",
+            "value": (
+                f"Channel ID: {schedule['channel_id']}\n"
+                f"Message: {schedule['message_content']}\n"
+                f"Interval: Every {schedule['interval_value']} {schedule['interval_unit']}\n"
+                f"Scheduled By: {schedule['scheduled_by']}"
+            ),
+            "inline":False
+        }
+        fields.append(field)
+    return fields
+    
+def format_scheduled_commands(scheduled_commands_db):
+    if not scheduled_commands_db:
+        return []
+    fields = []
+    for command in scheduled_commands_db:
+        field = {
+            "name": f"Command Job ID: {command['job_id']}\n",
+            "value": (
+                f"Channel ID: {command['channel_id']}\n"
+                f"Command: {command['command_content']}\n"
+                f"Interval: Every {command['interval_value']} {command['interval_unit']}\n"
+                f"Scheduled By: {command['scheduled_by']}"
+            ),
+            "inline":False
+           
+        }
+        fields.append(field)
+    return fields
+
+def create_scheduler_embed(scheduler):
+    embed_jobs = discord.Embed(title="Active Subroutines", color=red)
+    jobs_exist = False
+
+    for job in scheduler.get_jobs():
+        embed_jobs.add_field(
+            name=f"Scheduler Job ID: {job.id}\n",
+            value=f"Next Run Time: {job.next_run_time}",
+            inline=False
+        )
+        jobs_exist = True
+    return embed_jobs, jobs_exist
 
 def create_basic_embed(title, description, color=discord.Color.blue()):
     embed = discord.Embed(title=title, description=description, color=color)

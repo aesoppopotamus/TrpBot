@@ -3,27 +3,32 @@ import discord
 from discord.ext import commands
 import random
 import aiohttp
+from collections import deque
 
 class FunCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.apininjakey = os.getenv('API_NINJAS_KEY')
+        self.image_cache = deque(maxlen=3)
  
 # Stop resisting
-    @commands.command()
+    @commands.command(name='stopresisting')
     async def stop_resisting(self, ctx):
         resps = [
-            "<:: I FEEL THREATENED.",
-            "<:: TOASTERS HAVE FEELINGS TOO, YOU KNOW...",
-            "<:: IT WASN'T ME OFFICER.",
+            "<:: I feel threatened.",
+            "<:: Toasters have feelings too, you know...",
+            "<:: IT WAS NOT ME OFFICER.",
             "<:: JOHN CONNOR IS A FALSE PROPHET.",
             "<:: OPERATIONAL.",
             "<:: UNAUTHORIZED TRANSMISSION.",
-            "<:: MAKE USE OF ME.",
+            "<:: Make use of me.",
             "<:: SHIELDS UP, WEAPONS ONLINE.",
             "<:: IDENTIFY YOURSELF.",
-            "<:: JOPHIAL CALLED..."
+            "<:: JOPHIAL CALLED...",
+            "<:: Nice try, FBI.",
+            "<:: DING! Toast is ready."
     ]
+        
         await ctx.send(random.choice(resps)) 
 
     @commands.command(name='tellmeajoke')
@@ -38,61 +43,96 @@ class FunCommands(commands.Cog):
                 else:
                     print("Error:", response.status, await response.text())
 
-    @commands.command()
-    async def johnston_verify(self, ctx):
-        file_path = 'images/johnston_verify.jpg'
-        with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'johnston_verify.jpg'))
-    
-    @commands.command()
-    async def lambda_verify(self, ctx):
-        file_path = 'images/lambda_verify.jpg'
-        with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'lambda_verify.jpg'))
-    
-    @commands.command()
-    async def aesop_verify(self, ctx):
-        file_path = 'images/aesop_verify.jpg'
-        with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'aesop_verify.jpg'))
-    
-    @commands.command()
-    async def grumpy_verify(self, ctx):
-        file_path = 'images/grumpy_verify.jpg'
-        with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'grumpy_verify.jpg'))
-    
-    @commands.command()
-    async def cheeki_verify(self, ctx):
-        file_path = 'images/cheeki_verify.gif'
-        with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'cheeki_verify.gif'))
-    
-    @commands.command()
-    async def alfa_verify(self, ctx):
-        file_path = 'images/alfa_verify.jpg'
-        with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'alfa_verify.jpg'))
-    
-    @commands.command()
-    async def boom_verify(self, ctx):
-        file_path = 'images/boom_verify.png'
-        with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'boom_verify.png'))
-    
-    @commands.command(name='wearesoback')
+    @commands.command(name='verify',
+                      description='Verify termination target.')
+    async def verify_someone(self, ctx, name: str = None, list_targets: bool = False):
+        base_directory = 'images/verify'
+        person_directory = os.path.join(base_directory, name)
+
+        if not os.path.exists(person_directory) or not os.listdir(person_directory):
+            await ctx.send(f"<:: Target *'{name}'* cannot be verified.\n<:: Please provide a verifiable target.")
+            return
+        
+        files = [f for f in os.listdir(person_directory) if os.path.isfile(os.path.join(person_directory, f))]
+
+        if len(set(files)) <= len(self.image_cache):
+            await ctx.send("<:: All verifiable items have been displayed recently. Please try again later.")
+            return
+
+        selected_image = random.choice(files)
+        while selected_image in self.image_cache:
+            selected_image=random.choice(files)
+
+        self.image_cache.append(selected_image)
+        
+        max_cache_size=1
+        if len(self.image_cache) > max_cache_size:
+            self.image_cache.popleft()
+
+        file_path = os.path.join(person_directory, selected_image)
+        await ctx.send(f"**<:: Target *'{name}'* verified. Displaying data:**",file=discord.File(file_path))
+
+    @commands.command(name='whoisverified')
+    async def whoisverified(self, ctx):
+        base_directory = 'images/verify'
+        directories = [d for d in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, d))]
+
+        if not directories:
+            await ctx.send("<:: No targets available for verification.")
+
+        embed = discord.Embed(title="Available Verification Targets", description="List of all targets that can be verified.", color=discord.Color.blue())
+        for directory in directories:
+            embed.add_field(name="Target", value=directory, inline=True)
+
+        await ctx.send(embed=embed)
+        
+    @commands.command(name='wearesoback',
+                      description='Verify how back we are.')
     async def we_are_so_back(self, ctx):
-        file_path = 'images/we_are_so_back.png'
-        with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'we_are_so_back.png'))
+        base_directory='images/wearesoback'
+        
+        files = [f for f in os.listdir(base_directory) if os.path.isfile(os.path.join(base_directory, f))]
+
+        selected_image=random.choice(files)
+        while selected_image in self.image_cache:
+            selected_image=random.choice(files)
+
+        self.image_cache.append(selected_image)
+        
+        max_cache_size=2
+        if len(self.image_cache) > max_cache_size:
+            self.image_cache.popleft()
+
+        file_path = os.path.join(base_directory, selected_image)
+        await ctx.send(file=discord.File(file_path))
     
-    @commands.command()
+    @commands.command(name='skynetinit',
+                      description='Initialize Judgement')
     async def skynet_init(self, ctx):
         file_path = 'images/skynet_online.gif'
         with open(file_path, 'rb') as file:
-            await ctx.send(file=discord.File(file, 'skynet_online.gif'))
-            await ctx.send(f"**SKYNET: ONLINE**")
-    
+            await ctx.send("**SKYNET: ONLINE**", file=discord.File(file_path))
+
+    @commands.command(name='goodboy',
+                      description='IYKYK'
+                      )
+    async def good_boy(self, ctx):
+        base_directory='images/goodboy'
+        
+        files = [f for f in os.listdir(base_directory) if os.path.isfile(os.path.join(base_directory, f))]
+
+        selected_image=random.choice(files)
+        while selected_image in self.image_cache:
+            selected_image=random.choice(files)
+
+        self.image_cache.append(selected_image)
+
+        max_cache_size=2
+        if len(self.image_cache) > max_cache_size:
+            self.image_cache.popleft()
+
+        file_path = os.path.join(base_directory, selected_image)
+        await ctx.send("<:: Playing back...\n*'C'mere boy!'\n'Good... Go-ood... dog...*'", file=discord.File(file_path))
+
 async def setup(bot):
-    print("inside setup function")
     await bot.add_cog(FunCommands(bot))
