@@ -3,3 +3,4 @@ __pycache__
 TrpBot.code-workspace
 .gitignore
 images/
+discord.log
