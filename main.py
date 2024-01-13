@@ -68,6 +68,7 @@ class TRPBot(commands.Bot):
                 self.scheduler = AsyncIOScheduler()
                 self.db = Database(self, self.scheduler)  # Initialize Database here
                 self.logger = logger
+                self.scheduler.start()
                 
         async def send_message(self, channel_id, message):
                 channel = self.get_channel(channel_id)
@@ -78,11 +79,7 @@ class TRPBot(commands.Bot):
         
 
         async def load_cogs(self) -> None:
-
-               # await self.db.queue_repeating_messages()
-                self.scheduler.start()
-
-                # Load cogs here
+               # await self.db.queue_repeating_messages() -- this can executed with !startsubroutines
                 await self.load_extension('cogs.schedulingcommands')
                 await self.load_extension('cogs.funcommands')
                 await self.load_extension('cogs.skynet_help')

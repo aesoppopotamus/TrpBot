@@ -1,7 +1,7 @@
 import pymysql
 import os
 from apscheduler.triggers.interval import IntervalTrigger
-from utils.utils import create_repeating_task
+from utils.utils import create_repeating_task, invoke_command_from_content
 
 
 class Database:
@@ -75,7 +75,7 @@ class Database:
                     username = message['scheduled_by']
 
                     trigger = IntervalTrigger(**{interval_unit: interval_value})
-                    self.scheduler.add_job(create_repeating_task, trigger, args=[self.bot, channel_id, command_content, username], id=job_id)    
+                    self.scheduler.add_job(invoke_command_from_content, trigger, args=[self.bot, channel_id, command_content], id=job_id)    
         except Exception as e:
             print(f"Error queueing repeating messages: {e}")
         finally:

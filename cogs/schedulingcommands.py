@@ -1,9 +1,10 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from apscheduler.triggers.interval import IntervalTrigger
 from config import ALLOWED_UNITS
+import shlex
 from database.database import Database
-from utils.utils import create_repeating_task, create_repeating_cmd, format_scheduled_messages, format_scheduled_commands, create_scheduler_embed
+from utils.utils import create_repeating_task, create_repeating_cmd, format_scheduled_messages, format_scheduled_commands, create_scheduler_embed, invoke_command_from_content
 
 class SchedulingCommands(commands.Cog):
     def __init__(self, bot, scheduler):
@@ -25,10 +26,13 @@ class SchedulingCommands(commands.Cog):
         await self.db.queue_repeating_cmds()
         await ctx.send(f"<:: SkyNet Status: **ONLINE**. Subroutines initialized.")
 
-# Repeat scheduling commands
+# schedule message
     @commands.command(name='addsubroutinemsg',
                       description='Add a scheduled message to the queue.')
-    async def addsubroutine(self, ctx, interval_value: int, interval_unit, *, message: str):
+    async def addsubroutinemsg(self, ctx, interval_value: int, interval_unit, *, message: str):
+        if interval_value <= 0:
+            await ctx.send("<:: INVALID INTERVAL: Interval value must be positive.")
+            return
         if interval_unit not in ALLOWED_UNITS:
             await ctx.send(f"<:: INTERVAL DENIED: Allowed interval units are: {', '.join(ALLOWED_UNITS)}.")
             return
@@ -49,27 +53,6 @@ class SchedulingCommands(commands.Cog):
         scheduler_username = ctx.author.display_name
         self.db.add_scheduled_message(channel_id, message, interval_unit, interval_value, job_id, scheduler_username)
         await ctx.send(f"Repeating message scheduled every {interval_value} {interval_unit}: \"{message}\"")    
-
-    @commands.command(name='addsubroutinecmd', description='Add a scheduled command to the queue.')
-    async def addsubroutinecmd(self, ctx, interval_value: int, interval_unit, *, command_content: str):
-        if interval_unit not in ALLOWED_UNITS:
-            await ctx.send(f"<:: INTERVAL DENIED: Allowed interval units are: {', '.join(ALLOWED_UNITS)}.")
-            return
-        if not command_content:
-            await ctx.send(f"<:: INVALID ARGUMENT: Please provide a command.")
-            return
-        try:
-            trigger = IntervalTrigger(**{interval_unit: interval_value})
-            channel_id = ctx.channel.id
-
-            self.scheduler.add_job(create_repeating_cmd, trigger, args=[self.bot, channel_id, command_content])
-
-        except ValueError:
-            await ctx.send("**Invalid interval format.** Input valid time unit (seconds, minutes, hours, days, weeks).")
-            return
-        job_id = str(ctx.message.id)  # unique id
-        self.db.add_scheduled_command(channel_id, command_content, interval_unit, interval_value, job_id, ctx.author.display_name)
-        await ctx.send(f"Command scheduled every {interval_value} {interval_unit}: \"{command_content}\"")
 
 # List subroutines
     @commands.command(name='listsubroutines',
@@ -147,14 +130,46 @@ class SchedulingCommands(commands.Cog):
 
     # Pause jobs
     @commands.command(name='pausesubroutines')
-    async def clear_comms(self, ctx):
+    async def pause_comms(self, ctx):
         jobs = self.scheduler.get_jobs()
         if not jobs:
             await ctx.send("<:: Sisk. Clear comms.")
             return    
         for job in jobs:
             job.pause()
-        await ctx.send("<:: Temporariliy censuring communications.")
+        await ctx.send("<:: Temporarily censuring communications.")
 
 async def setup(bot):
     await bot.add_cog(SchedulingCommands(bot, bot.scheduler))
+
+#schedule cmds -- shit doesn't work
+        
+#    @commands.command(name='addsubroutinecmd', description='Add a scheduled command to the queue.')
+#    async def addsubroutinecmd(self, ctx, interval_value: int, interval_unit, *, command_content: str):
+#        if not interval_value:
+#            await ctx.send("<:: INVALID COMMAND: Interval value is a required arguement.")
+#            return
+#        if interval_value <= 0:
+#            await ctx.send("<:: INVALID INTERVAL: Interval value must be positive.")
+#            return
+#        if interval_unit not in ALLOWED_UNITS:
+#            await ctx.send(f"<:: INTERVAL DENIED: Allowed interval units are: {', '.join(ALLOWED_UNITS)}.")
+#            return
+#        if not command_content:
+#            await ctx.send(f"<:: INVALID ARGUMENT: Please provide a command.")
+#            return
+#        #scheduled task
+#        try:
+#            trigger = IntervalTrigger(**{interval_unit: interval_value})
+#            channel_id = ctx.channel.id
+#            self.scheduler.add_job(invoke_command_from_content, trigger, args=[self.bot, channel_id, command_content])
+#
+#        except ValueError:
+#            await ctx.send("**Invalid interval format.** Input valid time unit (seconds, minutes, hours, days, weeks).")
+#            return
+#        except Exception as e:
+#            await ctx.send(f"**Error scheduling command:** {e}")
+#            return
+#        job_id = str(ctx.message.id)  # unique id
+#        self.db.add_scheduled_command(channel_id, command_content, interval_unit, interval_value, job_id, ctx.author.display_name)
+#        await ctx.send(f"Command scheduled every {interval_value} {interval_unit}: \"{command_content}\"")

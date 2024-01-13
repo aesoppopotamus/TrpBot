@@ -4,12 +4,13 @@ from discord.ext import commands
 import random
 import aiohttp
 from collections import deque
+from utils.utils import we_are_so_back_logic
 
 class FunCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.apininjakey = os.getenv('API_NINJAS_KEY')
-        self.image_cache = deque(maxlen=3)
+        self.image_cache = deque(maxlen=5)
  
 # Stop resisting
     @commands.command(name='stopresisting')
@@ -65,7 +66,7 @@ class FunCommands(commands.Cog):
 
         self.image_cache.append(selected_image)
         
-        max_cache_size=1
+        max_cache_size=2
         if len(self.image_cache) > max_cache_size:
             self.image_cache.popleft()
 
@@ -89,21 +90,7 @@ class FunCommands(commands.Cog):
     @commands.command(name='wearesoback',
                       description='Verify how back we are.')
     async def we_are_so_back(self, ctx):
-        base_directory='images/wearesoback'
-        
-        files = [f for f in os.listdir(base_directory) if os.path.isfile(os.path.join(base_directory, f))]
-
-        selected_image=random.choice(files)
-        while selected_image in self.image_cache:
-            selected_image=random.choice(files)
-
-        self.image_cache.append(selected_image)
-        
-        max_cache_size=2
-        if len(self.image_cache) > max_cache_size:
-            self.image_cache.popleft()
-
-        file_path = os.path.join(base_directory, selected_image)
+        file_path = await we_are_so_back_logic(self.image_cache)
         await ctx.send(file=discord.File(file_path))
     
     @commands.command(name='skynetinit',

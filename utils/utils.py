@@ -1,8 +1,12 @@
 import re
 from typing import Union
-
+import random
+import os
 import discord
 from discord.errors import Forbidden
+import shlex
+
+
 
 ### @package utils
 #
@@ -22,15 +26,46 @@ red = discord.Color.from_rgb(255, 28, 25)      # error red
 #
 # Utilities and helper functions
 
+async def we_are_so_back_logic(image_cache):
+    base_directory = 'images/wearesoback'
+    files = [f for f in os.listdir(base_directory) if os.path.isfile(os.path.join(base_directory, f))]
+
+    selected_image = random.choice(files)
+    while selected_image in image_cache:
+        selected_image = random.choice(files)
+
+    image_cache.append(selected_image)
+
+    max_cache_size = 2
+    if len(image_cache) > max_cache_size:
+        image_cache.popleft()
+
+    file_path = os.path.join(base_directory, selected_image)
+    return file_path
+
+command_handler = {
+    'wearesoback': we_are_so_back_logic
+}
+
 async def create_repeating_task(bot, channel_id, message_content, username):
     await bot.send_message(channel_id, f"{message_content}\n*(scheduled by {username})*")
 
 async def create_repeating_cmd(bot, channel_id, command_content):
-    channel = bot.get_channel(channel_id)
-    if channel:
-        ctx = await bot.get_context(channel.last_message)
-        await bot.invoke(ctx, command_content)
+    command_name, *arguments = command_content.split()
 
+    command_function = command_handler.get(command_name)
+    if command_function:
+        try:
+            # Assuming you have a way to access or create an image_cache
+            image_cache = image_cache(channel_id)
+            file_path = await command_function(image_cache)
+            channel = bot.get_channel(channel_id)
+            if channel:
+                await channel.send(file=discord.File(file_path))
+        except Exception as e:
+            print(f"Error executing command '{command_name}': {e}")
+    else:
+        print(f"Command '{command_name}' not found.")
 
 ## Embeds
         
