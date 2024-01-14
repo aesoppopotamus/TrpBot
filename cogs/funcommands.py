@@ -73,7 +73,8 @@ class FunCommands(commands.Cog):
         file_path = os.path.join(person_directory, selected_image)
         await ctx.send(f"**<:: Target *'{name}'* verified. Displaying data:**",file=discord.File(file_path))
 
-    @commands.command(name='whoisverified')
+    @commands.command(name='whoisverified',
+                      description='List available targets.')
     async def whoisverified(self, ctx):
         base_directory = 'images/verify'
         directories = [d for d in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, d))]

@@ -4,15 +4,8 @@ import random
 import os
 import discord
 from discord.errors import Forbidden
-import shlex
+import datetime
 
-
-
-### @package utils
-#
-# The color presets, send_message() and make_embed() functions are
-# included in the [discord-bot template by
-# nonchris](https://github.com/nonchris/discord-bot)
 
 
 # color scheme for embeds as rbg
@@ -26,6 +19,12 @@ red = discord.Color.from_rgb(255, 28, 25)      # error red
 #
 # Utilities and helper functions
 
+def convert_month_abbr_to_fullname(month_abbr):
+        try:
+            return datetime.datetime.strptime(month_abbr.capitalize(), '%b').strftime('%B')
+        except ValueError:
+            return None
+        
 async def we_are_so_back_logic(image_cache):
     base_directory = 'images/wearesoback'
     files = [f for f in os.listdir(base_directory) if os.path.isfile(os.path.join(base_directory, f))]
@@ -118,6 +117,23 @@ def create_scheduler_embed(scheduler):
         )
         jobs_exist = True
     return embed_jobs, jobs_exist
+
+def get_gameplan_embed(get_gameplan_db):
+    if not get_gameplan_db:
+        return []
+    fields = []
+    for gameplan in get_gameplan_db:
+        field = {
+            "name": f"Gameplan: {gameplan['planning_header']}\n",
+            "value": (
+                f"*Detail*: {gameplan['planning_content']}\n"
+                f"*Owner*: {gameplan['username']}\n"
+                f"*Id*: {gameplan['id']}"
+            ),
+            "inline":False
+        }
+        fields.append(field)
+    return fields
 
 def create_basic_embed(title, description, color=discord.Color.blue()):
     embed = discord.Embed(title=title, description=description, color=color)

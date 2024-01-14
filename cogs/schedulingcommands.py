@@ -2,9 +2,8 @@ import discord
 from discord.ext import commands, tasks
 from apscheduler.triggers.interval import IntervalTrigger
 from config import ALLOWED_UNITS
-import shlex
 from database.database import Database
-from utils.utils import create_repeating_task, create_repeating_cmd, format_scheduled_messages, format_scheduled_commands, create_scheduler_embed, invoke_command_from_content
+from utils.utils import create_repeating_task, format_scheduled_messages, format_scheduled_commands, create_scheduler_embed
 
 class SchedulingCommands(commands.Cog):
     def __init__(self, bot, scheduler):
@@ -13,7 +12,8 @@ class SchedulingCommands(commands.Cog):
         self.db = Database(bot, scheduler)
 
 # Start schedules
-    @commands.command(name='startsubroutines')
+    @commands.command(name='startsubroutines',
+                      description='Schedules existing tasks in the database.')
     async def startsubroutines(self, ctx):
         scheduled_messages_db = self.db.get_scheduled_messages()
         scheduled_commands_db = self.db.get_scheduled_cmds()
@@ -23,13 +23,16 @@ class SchedulingCommands(commands.Cog):
             return
         
         await self.db.queue_repeating_messages()
-        await self.db.queue_repeating_cmds()
+        # await self.db.queue_repeating_cmds()
         await ctx.send(f"<:: SkyNet Status: **ONLINE**. Subroutines initialized.")
 
 # schedule message
     @commands.command(name='addsubroutinemsg',
-                      description='Add a scheduled message to the queue.')
+                      description='Add a scheduled message to the db/queue. Args: interval, interval_value[minutes, hours, days], message')
     async def addsubroutinemsg(self, ctx, interval_value: int, interval_unit, *, message: str):
+        if not interval_value:
+            await ctx.send("<:: INVALID COMMAND: Interval value is a required arguement.")
+            return      
         if interval_value <= 0:
             await ctx.send("<:: INVALID INTERVAL: Interval value must be positive.")
             return
@@ -44,10 +47,11 @@ class SchedulingCommands(commands.Cog):
             message_content = message
             username = ctx.author.display_name
 
-            self.scheduler.add_job(create_repeating_task, trigger, args=[self.bot, channel_id, message_content, username])
+            self.scheduler.add_job(create_repeating_task, trigger, args=[self.bot, channel_id, message_content, username], id=job_id)
 
         except ValueError:
             await ctx.send("**Invalid interval format.** Input valid time unit (seconds, minutes, hours, days, weeks).")
+       # add msg to scheduler
         job_id = str(ctx.message.id) #exmp unique id
         channel_id = ctx.channel.id
         scheduler_username = ctx.author.display_name
@@ -56,12 +60,12 @@ class SchedulingCommands(commands.Cog):
 
 # List subroutines
     @commands.command(name='listsubroutines',
-                      description='List all current messages scheduled & queued.')
+                      description='List all current messages scheduled.')
     async def listsubroutines(self, ctx):
         scheduled_messages_db = self.db.get_scheduled_messages()
-        scheduled_commands_db = self.db.get_scheduled_cmds()
+        # scheduled_commands_db = self.db.get_scheduled_cmds()
         
-        if not scheduled_messages_db and not scheduled_commands_db and not self.scheduler.get_jobs():
+        if not scheduled_messages_db and not self.scheduler.get_jobs():
             await ctx.send("<:: NO SUBROUTINES FOUND.")
             return
 
@@ -71,19 +75,18 @@ class SchedulingCommands(commands.Cog):
         for field in message_fields:
             embed_scheduled.add_field(**field)
 
-        command_fields = format_scheduled_commands(scheduled_commands_db)
-        for field in command_fields:
-            embed_scheduled.add_field(**field)
-
-        if message_fields or command_fields:
-            await ctx.send(embed=embed_scheduled)
+        #command_fields = format_scheduled_commands(scheduled_commands_db)
+        #for field in command_fields:
+        #    embed_scheduled.add_field(**field)
+        # if message_fields or command_fields:
+        #     await ctx.send(embed=embed_scheduled)
         
         embed_jobs, jobs_exist = create_scheduler_embed(self.scheduler)
         if jobs_exist:
             await ctx.send(embed=embed_jobs)
 
     @commands.command(name='terminatesubroutine',
-                      description='Remove a scheduled message from the queue and delete it from the DB')
+                      description='Remove a scheduled message from the queue and delete it from the DB. Args: job_id')
     async def deletesubroutine(self, ctx, job_id: str = None):
         if not job_id:
             await ctx.send("<:: INVALID ARGUEMENT: Input valid subroutine identifier (job_id).")
@@ -107,7 +110,8 @@ class SchedulingCommands(commands.Cog):
         await ctx.send(f"{job_removed_message}\n{db_removed_message}")
 
     # Clear jobs
-    @commands.command(name='clearlocalsubroutines')
+    @commands.command(name='clearlocalsubroutines',
+                      description='Clears bot scheduler of tasks.')
     async def clear_messagearray(self, ctx):
         jobs = self.scheduler.get_jobs()
         if not jobs:
@@ -117,7 +121,8 @@ class SchedulingCommands(commands.Cog):
         await ctx.send("<:: Array terminated.") 
 
         # Resume jobs
-    @commands.command(name='resumesubroutines')
+    @commands.command(name='resumesubroutines',
+                      description='Resumes bot scheduler.')
     async def resume_comms(self, ctx):
         jobs = self.scheduler.get_jobs()
         if not jobs:
@@ -129,7 +134,8 @@ class SchedulingCommands(commands.Cog):
         await ctx.send("<:: Resuming communication tasks.") 
 
     # Pause jobs
-    @commands.command(name='pausesubroutines')
+    @commands.command(name='pausesubroutines',
+                      description='Pauses bot scheduler.')
     async def pause_comms(self, ctx):
         jobs = self.scheduler.get_jobs()
         if not jobs:

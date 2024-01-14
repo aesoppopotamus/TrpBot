@@ -76,13 +76,6 @@ class TRPBot(commands.Bot):
                         await channel.send(message)
                 else:
                         print(f"Channel {channel_id} not found")
-        
-
-        async def load_cogs(self) -> None:
-               # await self.db.queue_repeating_messages() -- this can executed with !startsubroutines
-                await self.load_extension('cogs.schedulingcommands')
-                await self.load_extension('cogs.funcommands')
-                await self.load_extension('cogs.skynet_help')
                 
         @tasks.loop(minutes=5.0)
         async def status_task(self) -> None:
@@ -169,7 +162,14 @@ class TRPBot(commands.Bot):
                     await context.send(embed=embed)
                 else:
                     raise error
-
+        async def load_cogs(self) -> None:
+               # await self.db.queue_repeating_messages() -- this can executed with !startsubroutines
+                await self.load_extension('cogs.schedulingcommands')
+                await self.load_extension('cogs.funcommands')
+                await self.load_extension('cogs.skynet_help')
+                await self.load_extension('cogs.nostalgia')
+                await self.load_extension('cogs.monthlyplan')
+                await self.load_extension('cogs.trello')
 
 
 bot = TRPBot(command_prefix='!', intents=intents)        
