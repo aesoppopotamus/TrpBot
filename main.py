@@ -2,6 +2,7 @@ import discord
 import os
 import logging
 import platform
+import asyncio
 from discord.ext import commands, tasks
 from discord.ext.commands import Context
 import random
@@ -69,13 +70,33 @@ class TRPBot(commands.Bot):
                 self.db = Database(self, self.scheduler)  # Initialize Database here
                 self.logger = logger
                 self.scheduler.start()
-                
-        async def send_message(self, channel_id, message):
-                channel = self.get_channel(channel_id)
-                if channel:
-                        await channel.send(message)
-                else:
-                        print(f"Channel {channel_id} not found")
+                self.heartbeat_interval = None
+                self.last_heartbeat_ack = None
+
+        async def on_ready(self):
+              print(f"<:: Logged in as {self.user}")
+              self.heartbeat_task = self.loop.create_task(self.heartbeat())
+
+        async def on_resumed(self):
+              print('Bot has resumed the session')
+
+        async def on_disconnect(self):
+              print('Bot has disconnected')
+
+        async def heartbeat(self):
+              await self.wait_until_ready()
+              while not self.is_closed():
+                    if self.heartbeat_interval:
+                          await self.send_heartbeat()
+                          await asyncio.sleep(self.heartbeat_interval / 1000.0)
+                    else:
+                        await asyncio.sleep(1)
+
+        async def on_socket_response(self, msg):
+            if msg.get('op') == 10:  # Opcode 10 for Hello
+                self.heartbeat_interval = msg['d']['heartbeat_interval']
+            if msg.get('op') == 11:  # Opcode 11 for Heartbeat ACK
+                self.last_heartbeat_ack = discord.utils.utcnow()
                 
         @tasks.loop(minutes=5.0)
         async def status_task(self) -> None:
@@ -162,13 +183,13 @@ class TRPBot(commands.Bot):
                     await context.send(embed=embed)
                 else:
                     raise error
+                
         async def load_cogs(self) -> None:
-               # await self.db.queue_repeating_messages() -- this can executed with !startsubroutines
                 await self.load_extension('cogs.schedulingcommands')
                 await self.load_extension('cogs.funcommands')
                 await self.load_extension('cogs.skynet_help')
                 await self.load_extension('cogs.nostalgia')
-                await self.load_extension('cogs.monthlyplan')
+            # await self.load_extension('cogs.monthlyplan')
                 await self.load_extension('cogs.trello')
 
 
