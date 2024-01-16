@@ -3,3 +3,5 @@
 [2024-01-16 00:26:54] [INFO    ] discord_bot: Python version: 3.9.18
 [2024-01-16 00:26:54] [INFO    ] discord_bot: Running on: Linux 5.15.133.1-microsoft-standard-WSL2 (posix)
 [2024-01-16 00:26:54] [INFO    ] discord_bot: -------------------
+[2024-01-16 00:27:25] [INFO    ] discord_bot: Executed listsubroutines command in dg/dumpster/general/ (ID: 1039777275564019802) by aesoppopotamus (ID: 225833171260932096)
+[2024-01-16 00:27:28] [INFO    ] discord_bot: Executed startsubroutines command in dg/dumpster/general/ (ID: 1039777275564019802) by aesoppopotamus (ID: 225833171260932096)
