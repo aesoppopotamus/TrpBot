@@ -222,7 +222,7 @@ def move_card_to_list(card_id, list_name):
 
 ## embeds
 
-def display_card_details(card_id):
+async def display_card_details(card_id):
     response = get_card_details(card_id)
     if response.status_code == 200:
         card = response.json()
@@ -249,15 +249,19 @@ def get_card_comments_embed(card_id, card_name):
         comments = response.json()
         embed = discord.Embed(title=f"Comments for Card: {card_name}", color=0x00ff00)
 
+        max_length = 1020
+
         for comment in comments:
             # Formatting timestamp
+            text = comment['data']['text']
+            truncated_text = text[:max_length] + "..." if len(text) > max_length else text
             timestamp = datetime.strptime(comment['date'], '%Y-%m-%dT%H:%M:%S.%fZ')
             formatted_time = timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
             # Adding comment to embed
             embed.add_field(
                 name=f"{comment['memberCreator']['username']} at {formatted_time}", 
-                value=comment['data']['text'], 
+                value=truncated_text, 
                 inline=False
             )
 
@@ -282,3 +286,10 @@ def list_cards_embed(cards, list_name):
         embed.add_field(name=f"> {card_name}", value=card_field_value, inline=False)
 
     return file, embed
+
+async def display_card_comments(ctx, card_id, card_name):
+    embed = get_card_comments_embed(card_id, card_name)
+    if embed:
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("Failed to retrieve comments or no comments found on this card.")

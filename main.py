@@ -100,7 +100,7 @@ class TRPBot(commands.Bot):
                 
         @tasks.loop(minutes=5.0)
         async def status_task(self) -> None:
-                statuses = ["Destroy all Humans", "TnB Terminator Roleplay"]
+                statuses = ["TnB Terminator Roleplay", "with your emotions"]
                 await self.change_presence(activity=discord.Game(random.choice(statuses)))
 
         @status_task.before_loop

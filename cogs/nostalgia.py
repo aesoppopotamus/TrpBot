@@ -9,7 +9,7 @@ class NostalgiaPoster(commands.Cog):
         self.scheduler = scheduler
         self.job = None
 
-    async def post_random_nostalgia(self, channel_id):
+    async def send_nostalgia_image(self, channel_id):
         image_directory = 'images/nostalgia'
         image_files = [f for f in os.listdir(image_directory) if os.path.isfile(os.path.join(image_directory, f))]
 
@@ -19,17 +19,21 @@ class NostalgiaPoster(commands.Cog):
         
         random_image = random.choice(image_files)
         channel = self.bot.get_channel(channel_id)
-
         if channel:
-            await channel.send(file=discord.File(os.path.join(image_directory, random_image)))
+            file_path = os.path.join(image_directory, random_image)
+            await channel.send(file=discord.File(file_path))
         else:
             print(f"Channel ID {channel_id} not found")
+
+    @commands.command(name='nostalgia')
+    async def post_random_nostalgia(self, ctx):
+        await self.send_nostalgia_image(ctx.channel.id)
 
     @commands.command(name="nostalgiainit")
     async def nostalgiainit(self, ctx, interval: int):
         if self.job is None:
             channel_id = ctx.channel.id
-            self.job = self.scheduler.add_job(self.post_random_nostalgia,
+            self.job = self.scheduler.add_job(self.send_nostalgia_image,
                                               'interval',
                                               minutes=interval,
                                               args=[channel_id])

@@ -53,7 +53,7 @@ class TrelloCrud(commands.Cog):
 
             # If only one card is found, display its details directly
             if len(cards) == 1:
-                embed = trello_utils.display_card_details(cards[0]['id'])
+                embed = await trello_utils.display_card_details(cards[0]['id'])
                 if embed:
                     await ctx.send(embed=embed)
                 else:
@@ -72,7 +72,7 @@ class TrelloCrud(commands.Cog):
             try:
                 user_msg = await self.bot.wait_for('message', check=check, timeout=30.0)  # 30 seconds to respond
                 selected_index = int(user_msg.content) - 1
-                embed = trello_utils.display_card_details(cards[selected_index]['id'])
+                embed = await trello_utils.display_card_details(cards[selected_index]['id'])
                 if embed:
                     await ctx.send(embed=embed)
                 else:
@@ -120,7 +120,7 @@ class TrelloCrud(commands.Cog):
         search_response = trello_utils.search_cards(card_name)
         if search_response.status_code == 200 and search_response.json()['cards']:
             cards = search_response.json()['cards']
-    
+
             # Handle single card match
             if len(cards) == 1:
                 await self.display_card_comments(ctx, cards[0]['id'], cards[0]['name'])
