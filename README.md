@@ -3,5 +3,3 @@
  - discord api key
  - db logins
  - other keys 
-
-test
